@@ -125,7 +125,7 @@ class WalletConnectProvider {
             let result = null;
             const wc = await this.getWalletConnector();
             switch (payload.method) {
-                case "eidoo_networks":
+                case "eidoo_getNetworks":
                     result = await wc.sendCustomRequest(payload);
                     break;
                 case "wc_killSession":
