@@ -1,6 +1,6 @@
 {
   "name": "@eidooconnect/web3-provider",
-  "version": "1.6.6",
+  "version": "1.6.7",
   "description": "Web3 Provider for EidooConnect",
   "scripts": {
     "clean": "rm -rf dist",
