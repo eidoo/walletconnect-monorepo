@@ -1,7 +1,7 @@
 {
-  "name": "@eidooconnect/web3-provider",
+  "name": "@walletconnect/web3-provider",
   "version": "1.6.7",
-  "description": "Web3 Provider for EidooConnect",
+  "description": "Web3 Provider for walletconnect",
   "scripts": {
     "clean": "rm -rf dist",
     "build:pre": "run-s clean",

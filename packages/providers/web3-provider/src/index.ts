@@ -21,7 +21,7 @@ const HookedWalletSubprovider = require("web3-provider-engine/subproviders/hooke
 const NonceSubprovider = require("web3-provider-engine/subproviders/nonce-tracker");
 const SubscriptionsSubprovider = require("web3-provider-engine/subproviders/subscriptions");
 
-class EidooConnectProvider {
+class WalletConnectProvider {
   public bridge = "https://bridge.walletconnect.org";
   public qrcode = true;
   public qrcodeModal = QRCodeModal;
@@ -454,4 +454,4 @@ class EidooConnectProvider {
   }
 }
 
-export default EidooConnectProvider;
+export default WalletConnectProvider;

@@ -10,7 +10,7 @@ const FilterSubprovider = require("web3-provider-engine/subproviders/filters");
 const HookedWalletSubprovider = require("web3-provider-engine/subproviders/hooked-wallet");
 const NonceSubprovider = require("web3-provider-engine/subproviders/nonce-tracker");
 const SubscriptionsSubprovider = require("web3-provider-engine/subproviders/subscriptions");
-class EidooConnectProvider {
+class WalletConnectProvider {
     constructor(opts) {
         this.bridge = "https://bridge.walletconnect.org";
         this.qrcode = true;
@@ -44,7 +44,6 @@ class EidooConnectProvider {
                 await this.enable();
             }
             if (this.providers[_chainId] && this.providers[_chainId].engine) {
-                console.log('stopping provider to swtich network');
                 await this.providers[_chainId].engine.stop();
             }
             this.initialize(_chainId);
@@ -53,7 +52,6 @@ class EidooConnectProvider {
             return this.send(payload, _chainId);
         };
         this.send = async (payload, _chainId, callback) => {
-            console.log('@provider send', payload, _chainId);
             if (typeof payload === "string") {
                 const method = payload;
                 let params = callback;
@@ -248,7 +246,7 @@ class EidooConnectProvider {
     }
     async onDisconnect() {
         var _a;
-        for (let provider of Object.values(this.providers)) {
+        for (let provider of (Object.values(this.providers))) {
             await ((_a = provider === null || provider === void 0 ? void 0 : provider.engine) === null || _a === void 0 ? void 0 : _a.stop());
         }
         this.event.emit("close", 1000, "Connection closed");
@@ -396,5 +394,5 @@ class EidooConnectProvider {
         };
     }
 }
-export default EidooConnectProvider;
+export default WalletConnectProvider;
 //# sourceMappingURL=index.js.map

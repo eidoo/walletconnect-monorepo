@@ -1,1 +1,1 @@
-declare module "@eidooconnect/web3-provider"
+declare module "@walletconnect/web3-provider"

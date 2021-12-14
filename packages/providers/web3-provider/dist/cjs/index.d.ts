@@ -1,6 +1,6 @@
 import HttpConnection from "@walletconnect/http-connection";
 import { IRPCMap, IConnector, IJsonRpcResponseSuccess, IWalletConnectProviderOptions, IQRCodeModalOptions } from "@walletconnect/types";
-declare class EidooConnectProvider {
+declare class WalletConnectProvider {
     bridge: string;
     qrcode: boolean;
     qrcodeModal: {
@@ -53,5 +53,5 @@ declare class EidooConnectProvider {
     initialize(_chainId: number, _rpcUrl?: string | undefined): void;
     private configWallet;
 }
-export default EidooConnectProvider;
+export default WalletConnectProvider;
 //# sourceMappingURL=index.d.ts.map
