@@ -38,7 +38,7 @@ class WalletConnectProvider {
                 throw new Error("Failed to connect to WalleConnect");
             }
         };
-        this.setRpcProvider = async (_chainId) => {
+        this.setRpcProvider = async (_chainId, _rpcUrl = "") => {
             const wc = await this.getWalletConnector();
             if (!wc.connected) {
                 await this.enable();
@@ -46,7 +46,7 @@ class WalletConnectProvider {
             if (this.providers[_chainId] && this.providers[_chainId].engine) {
                 await this.providers[_chainId].engine.stop();
             }
-            this.initialize(_chainId);
+            this.initialize(_chainId, _rpcUrl);
         };
         this.request = async (payload, _chainId) => {
             return this.send(payload, _chainId);

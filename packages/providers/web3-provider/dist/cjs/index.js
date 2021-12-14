@@ -41,7 +41,7 @@ class WalletConnectProvider {
                 throw new Error("Failed to connect to WalleConnect");
             }
         });
-        this.setRpcProvider = (_chainId) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
+        this.setRpcProvider = (_chainId, _rpcUrl = "") => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
             const wc = yield this.getWalletConnector();
             if (!wc.connected) {
                 yield this.enable();
@@ -49,7 +49,7 @@ class WalletConnectProvider {
             if (this.providers[_chainId] && this.providers[_chainId].engine) {
                 yield this.providers[_chainId].engine.stop();
             }
-            this.initialize(_chainId);
+            this.initialize(_chainId, _rpcUrl);
         });
         this.request = (payload, _chainId) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
             return this.send(payload, _chainId);

@@ -92,7 +92,7 @@ class WalletConnectProvider {
     }
   };
 
-  setRpcProvider = async (_chainId: number) => {
+  setRpcProvider = async (_chainId: number, _rpcUrl: string | undefined = "") => {
 
     const wc = await this.getWalletConnector();
     
@@ -104,7 +104,7 @@ class WalletConnectProvider {
       await this.providers[_chainId].engine.stop()
     }
 
-    this.initialize(_chainId)
+    this.initialize(_chainId, _rpcUrl)
   }
 
   request = async (payload: any, _chainId: number): Promise<any> => {

@@ -26,7 +26,7 @@ declare class WalletConnectProvider {
     get connector(): IConnector;
     get walletMeta(): import("@walletconnect/types").IClientMeta | null;
     enable: () => Promise<string[]>;
-    setRpcProvider: (_chainId: number) => Promise<void>;
+    setRpcProvider: (_chainId: number, _rpcUrl?: string | undefined) => Promise<void>;
     request: (payload: any, _chainId: number) => Promise<any>;
     send: (payload: any, _chainId: number, callback?: any) => Promise<any>;
     onConnect: (callback: any) => void;
