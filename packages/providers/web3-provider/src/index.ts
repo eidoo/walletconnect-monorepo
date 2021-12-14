@@ -101,7 +101,6 @@ class EidooConnectProvider {
     }
 
     if(this.providers[_chainId] && this.providers[_chainId].engine) {
-      console.log('stopping provider to swtich network')
       await this.providers[_chainId].engine.stop()
     }
 
@@ -113,7 +112,6 @@ class EidooConnectProvider {
   };
 
   send = async (payload: any, _chainId: number, callback?: any): Promise<any> => {
-    console.log('@provider send', payload, _chainId)
     // Web3 1.0 beta.38 (and above) calls `send` with method and parameters
     if (typeof payload === "string") {
       const method = payload;
@@ -299,7 +297,7 @@ class EidooConnectProvider {
 
   async onDisconnect() {
     
-    for (let provider of <any>Object.values(this.providers)) {
+    for (let provider of (Object.values(this.providers)) as any) {
       await provider?.engine?.stop()
     }
 
@@ -362,7 +360,7 @@ class EidooConnectProvider {
     this.providers[_chainId].engine = new ProviderEngine({pollingInterval: 8000})
 
     this.updateRpcUrl(_chainId, _rpcUrl);
-    
+
     this.providers[_chainId].engine.addProvider(
       new FixtureSubprovider({
         eth_hashrate: "0x00",
