@@ -16,7 +16,7 @@ class WalletConnectProvider {
         this.qrcode = true;
         this.qrcodeModal = QRCodeModal;
         this.qrcodeModalOptions = undefined;
-        this.rpc = null;
+        this.rpc = {};
         this.infuraId = "";
         this.http = null;
         this.isConnecting = false;
@@ -24,8 +24,6 @@ class WalletConnectProvider {
         this.connectCallbacks = [];
         this.accounts = [];
         this.chainId = 1;
-        this.chainIds = new Map();
-        this.rpcUrl = "";
         this.providers = {};
         this.event = new EventEmitter();
         this.enable = async () => {
@@ -95,10 +93,6 @@ class WalletConnectProvider {
                     clientMeta: opts === null || opts === void 0 ? void 0 : opts.clientMeta,
                 });
         this.rpc = opts.rpc || null;
-        if (!this.rpc &&
-            (!opts.infuraId || typeof opts.infuraId !== "string" || !opts.infuraId.trim())) {
-            throw new Error("Missing one of the required parameters: rpc or infuraId");
-        }
         this.infuraId = opts.infuraId || "";
         this.chainId = (opts === null || opts === void 0 ? void 0 : opts.chainId) || this.chainId;
     }
@@ -110,6 +104,12 @@ class WalletConnectProvider {
     }
     get walletMeta() {
         return this.wc.peerMeta;
+    }
+    setRpcNetworks(_networks) {
+        if (this.rpc !== _networks) {
+            this.rpc = _networks;
+            this.restartRpc();
+        }
     }
     async disconnect() {
         this.close();
@@ -260,11 +260,22 @@ class WalletConnectProvider {
             this.event.emit("accountsChanged", accounts);
         }
     }
+    restartRpc() {
+        if (this.rpc) {
+            for (const [chainId, rpcUrl] of Object.entries(this.rpc)) {
+                if (this.providers[chainId]) {
+                    this.updateHttpConnection(chainId, rpcUrl);
+                }
+                else {
+                    this.initialize(chainId, rpcUrl);
+                }
+            }
+        }
+    }
     updateRpcUrl(_chainId, _rpcUrl = "") {
         const rpc = { infuraId: this.infuraId, custom: this.rpc || undefined };
         _rpcUrl = _rpcUrl || getRpcUrl(_chainId, rpc);
         if (_rpcUrl) {
-            this.rpcUrl = _rpcUrl;
             this.updateHttpConnection(_chainId, _rpcUrl);
         }
         else {
@@ -272,13 +283,12 @@ class WalletConnectProvider {
         }
     }
     updateHttpConnection(_chainId, _rpcUrl) {
-        if (this.rpcUrl) {
-            this.providers[_chainId].http = new HttpConnection(_rpcUrl);
-            this.providers[_chainId].http.on("payload", _payload => this.event.emit("payload", _payload));
-            this.providers[_chainId].http.on("error", _error => this.event.emit("error", _error));
-        }
+        this.providers[_chainId].http = new HttpConnection(_rpcUrl);
+        this.providers[_chainId].http.on("payload", _payload => this.event.emit("payload", _payload));
+        this.providers[_chainId].http.on("error", _error => this.event.emit("error", _error));
     }
     sendAsyncPromise(method, params, _chainId) {
+        console.log('sendAsyncPromise', _chainId, this.providers);
         return new Promise((resolve, reject) => {
             this.providers[_chainId].engine.sendAsync({
                 id: payloadId(),

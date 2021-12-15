@@ -17,14 +17,13 @@ declare class WalletConnectProvider {
     connectCallbacks: any[];
     accounts: string[];
     chainId: number;
-    chainIds: Map<string, number>;
-    rpcUrl: string;
     providers: {};
     event: any;
     constructor(opts: IWalletConnectProviderOptions);
     get isWalletConnect(): boolean;
     get connector(): IConnector;
     get walletMeta(): import("@walletconnect/types").IClientMeta | null;
+    setRpcNetworks(_networks: IRPCMap): void;
     enable: () => Promise<string[]>;
     setRpcProvider: (_chainId: number, _rpcUrl?: string | undefined) => Promise<void>;
     request: (payload: any, _chainId: number) => Promise<any>;
@@ -47,6 +46,7 @@ declare class WalletConnectProvider {
     subscribeWalletConnector(): Promise<void>;
     onDisconnect(): Promise<void>;
     updateState(sessionParams: any): Promise<void>;
+    restartRpc(): void;
     updateRpcUrl(_chainId: number, _rpcUrl?: string | undefined): void;
     updateHttpConnection(_chainId: number, _rpcUrl: any): void;
     sendAsyncPromise(method: string, params: any, _chainId: number): Promise<any>;
