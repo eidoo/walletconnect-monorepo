@@ -314,6 +314,16 @@ class WalletConnectProvider {
     }
   }
 
+  async updateSession(sessionParams: any) {
+    const { chainId, accounts } = sessionParams
+    const wc = await this.getWalletConnector()
+    wc.updateSession({
+      chainId,
+      accounts
+    })
+    
+  }
+
   restartRpc() {
     if(this.rpc) {
       for (const [chainId, rpcUrl] of Object.entries(this.rpc) as any) {

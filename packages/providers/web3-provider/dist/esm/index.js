@@ -260,6 +260,14 @@ class WalletConnectProvider {
             this.event.emit("accountsChanged", accounts);
         }
     }
+    async updateSession(sessionParams) {
+        const { chainId, accounts } = sessionParams;
+        const wc = await this.getWalletConnector();
+        wc.updateSession({
+            chainId,
+            accounts
+        });
+    }
     restartRpc() {
         if (this.rpc) {
             for (const [chainId, rpcUrl] of Object.entries(this.rpc)) {
@@ -288,7 +296,6 @@ class WalletConnectProvider {
         this.providers[_chainId].http.on("error", _error => this.event.emit("error", _error));
     }
     sendAsyncPromise(method, params, _chainId) {
-        console.log('sendAsyncPromise', _chainId, this.providers);
         return new Promise((resolve, reject) => {
             this.providers[_chainId].engine.sendAsync({
                 id: payloadId(),

@@ -46,6 +46,7 @@ declare class WalletConnectProvider {
     subscribeWalletConnector(): Promise<void>;
     onDisconnect(): Promise<void>;
     updateState(sessionParams: any): Promise<void>;
+    updateSession(sessionParams: any): Promise<void>;
     restartRpc(): void;
     updateRpcUrl(_chainId: number, _rpcUrl?: string | undefined): void;
     updateHttpConnection(_chainId: number, _rpcUrl: any): void;

@@ -279,6 +279,16 @@ class WalletConnectProvider {
             }
         });
     }
+    updateSession(sessionParams) {
+        return (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
+            const { chainId, accounts } = sessionParams;
+            const wc = yield this.getWalletConnector();
+            wc.updateSession({
+                chainId,
+                accounts
+            });
+        });
+    }
     restartRpc() {
         if (this.rpc) {
             for (const [chainId, rpcUrl] of Object.entries(this.rpc)) {
@@ -307,7 +317,6 @@ class WalletConnectProvider {
         this.providers[_chainId].http.on("error", _error => this.event.emit("error", _error));
     }
     sendAsyncPromise(method, params, _chainId) {
-        console.log('sendAsyncPromise', _chainId, this.providers);
         return new Promise((resolve, reject) => {
             this.providers[_chainId].engine.sendAsync({
                 id: (0, utils_1.payloadId)(),
