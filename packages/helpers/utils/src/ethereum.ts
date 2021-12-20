@@ -64,6 +64,7 @@ export function parseTransactionData(txData: Partial<ITxData>): Partial<ITxData>
   }
 
   const txDataRPC = {
+    ...txData,
     from: sanitizeHex(txData.from),
     to: typeof txData.to === "undefined" ? "" : sanitizeHex(txData.to),
     gasPrice: typeof txData.gasPrice === "undefined" ? "" : parseHexValues(txData.gasPrice),
