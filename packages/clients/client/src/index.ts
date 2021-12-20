@@ -1,4 +1,4 @@
-import Connector from "@eidoo/walletconnect-monorepo/packages/clinets/core";
+import Connector from "@eidoo/walletconnect-monorepo/packages/clients/core";
 import { IWalletConnectOptions, IPushServerOptions } from "@walletconnect/types";
 import * as cryptoLib from "@walletconnect/iso-crypto";
 
