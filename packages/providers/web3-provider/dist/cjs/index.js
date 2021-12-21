@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
-const client_1 = (0, tslib_1.__importDefault)(require("@walletconnect/client"));
+const client_1 = (0, tslib_1.__importDefault)(require("@eidoo/walletconnect-monorepo/packages/clients/client"));
 const qrcode_modal_1 = (0, tslib_1.__importDefault)(require("@walletconnect/qrcode-modal"));
 const http_connection_1 = (0, tslib_1.__importDefault)(require("@walletconnect/http-connection"));
 const utils_1 = require("@walletconnect/utils");

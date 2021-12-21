@@ -1,4 +1,4 @@
-import WalletConnect from "@walletconnect/client";
+import WalletConnect from "@eidoo/walletconnect-monorepo/packages/clients/client";
 import QRCodeModal from "@walletconnect/qrcode-modal";
 import HttpConnection from "@walletconnect/http-connection";
 
@@ -29,7 +29,7 @@ class WalletConnectProvider {
   public rpc: IRPCMap | null = {};
   public infuraId = "";
   public http: HttpConnection | null = null;
-  public wc: IConnector;
+  public wc: IConnector | any;
   public isConnecting = false;
   public connected = false;
   public connectCallbacks: any[] = [];

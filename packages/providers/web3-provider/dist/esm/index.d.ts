@@ -11,7 +11,7 @@ declare class WalletConnectProvider {
     rpc: IRPCMap | null;
     infuraId: string;
     http: HttpConnection | null;
-    wc: IConnector;
+    wc: IConnector | any;
     isConnecting: boolean;
     connected: boolean;
     connectCallbacks: any[];
@@ -21,8 +21,8 @@ declare class WalletConnectProvider {
     event: any;
     constructor(opts: IWalletConnectProviderOptions);
     get isWalletConnect(): boolean;
-    get connector(): IConnector;
-    get walletMeta(): import("@walletconnect/types").IClientMeta | null;
+    get connector(): any;
+    get walletMeta(): any;
     setRpcNetworks(_networks: IRPCMap): void;
     enable: () => Promise<string[]>;
     setRpcProvider: (_chainId: number, _rpcUrl?: string | undefined) => Promise<void>;

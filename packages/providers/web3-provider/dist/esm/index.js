@@ -1,4 +1,4 @@
-import WalletConnect from "@walletconnect/client";
+import WalletConnect from "@eidoo/walletconnect-monorepo/packages/clients/client";
 import QRCodeModal from "@walletconnect/qrcode-modal";
 import HttpConnection from "@walletconnect/http-connection";
 import { payloadId, signingMethods, parsePersonalSign, getRpcUrl } from "@walletconnect/utils";
