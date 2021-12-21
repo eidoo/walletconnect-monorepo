@@ -1,4 +1,4 @@
-import Connector from "./../../core/dist/esm";
+import Connector from "@eidoo/walletconnect-monorepo/packages/clients/core";
 import { IWalletConnectOptions, IPushServerOptions } from "@walletconnect/types";
 declare class WalletConnect extends Connector {
     constructor(connectorOpts: IWalletConnectOptions, pushServerOpts?: IPushServerOptions);

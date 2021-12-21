@@ -60,6 +60,7 @@
     "webpack-cli": "3.3.10"
   },
   "dependencies": {
+    "@eidoo/walletconnect-monorepo": "git+ssh://github.com:eidoo/walletconnect-monorepo.git#feat/multiple-networks",
     "@walletconnect/iso-crypto": "^1.6.6",
     "@walletconnect/types": "^1.6.6",
     "@walletconnect/utils": "^1.6.6"

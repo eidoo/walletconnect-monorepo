@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
-const esm_1 = (0, tslib_1.__importDefault)(require("./../../core/dist/esm"));
+const core_1 = (0, tslib_1.__importDefault)(require("@eidoo/walletconnect-monorepo/packages/clients/core"));
 const cryptoLib = (0, tslib_1.__importStar)(require("@walletconnect/iso-crypto"));
-class WalletConnect extends esm_1.default {
+class WalletConnect extends core_1.default {
     constructor(connectorOpts, pushServerOpts) {
         super({
             cryptoLib,
