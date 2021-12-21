@@ -8,7 +8,7 @@
     "build:cjs": "npx tsc -p tsconfig.cjs.json",
     "build:esm": "npx tsc -p tsconfig.esm.json",
     "build:umd": "webpack",
-    "build": "run-s build:pre build:cjs build:esm build:umd",
+    "build": "run-s build:pre build:esm build:cjs",
     "test": "env TS_NODE_PROJECT=\"tsconfig.cjs.json\" mocha -r ts-node/register ./test/**/*.spec.ts --exit"
   },
   "keywords": [
@@ -60,7 +60,7 @@
     "webpack-cli": "3.3.10"
   },
   "dependencies": {
-    "@walletconnect/core": "^1.6.6",
+    "@eidoo/walletconnect-monorepo": "git+ssh://github.com:eidoo/walletconnect-monorepo.git#feat/multiple-networks",
     "@walletconnect/iso-crypto": "^1.6.6",
     "@walletconnect/types": "^1.6.6",
     "@walletconnect/utils": "^1.6.6"

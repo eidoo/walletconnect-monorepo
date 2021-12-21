@@ -1,7 +1,6 @@
-import Connector from "@walletconnect/core";
+import Connector from "@eidoo/walletconnect-monorepo/packages/clients/core";
 import { IWalletConnectOptions, IPushServerOptions } from "@walletconnect/types";
 import * as cryptoLib from "@walletconnect/iso-crypto";
-
 class WalletConnect extends Connector {
   constructor(connectorOpts: IWalletConnectOptions, pushServerOpts?: IPushServerOptions) {
     super({

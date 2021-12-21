@@ -41,7 +41,7 @@ export function parsePersonalSign(params: string[]): string[] {
   return params;
 }
 
-export function parseTransactionData(txData: Partial<ITxData>): Partial<ITxData> {
+export function parseTransactionData(txData: Partial<any>): Partial<any> {
   if (typeof txData.type !== "undefined" && txData.type !== "0") return txData;
 
   if (typeof txData.from === "undefined" || !isValidAddress(txData.from)) {
@@ -64,6 +64,7 @@ export function parseTransactionData(txData: Partial<ITxData>): Partial<ITxData>
   }
 
   const txDataRPC = {
+    ...txData,
     from: sanitizeHex(txData.from),
     to: typeof txData.to === "undefined" ? "" : sanitizeHex(txData.to),
     gasPrice: typeof txData.gasPrice === "undefined" ? "" : parseHexValues(txData.gasPrice),

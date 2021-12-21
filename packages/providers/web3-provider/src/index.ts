@@ -1,6 +1,7 @@
-import WalletConnect from "@walletconnect/client";
+import WalletConnect from "@eidoo/walletconnect-monorepo/packages/clients/client";
 import QRCodeModal from "@walletconnect/qrcode-modal";
 import HttpConnection from "@walletconnect/http-connection";
+
 import { payloadId, signingMethods, parsePersonalSign, getRpcUrl } from "@walletconnect/utils";
 import {
   IRPCMap,
@@ -11,6 +12,7 @@ import {
   IQRCodeModalOptions,
 } from "@walletconnect/types";
 
+const EventEmitter = require('events')
 const ProviderEngine = require("web3-provider-engine");
 const CacheSubprovider = require("web3-provider-engine/subproviders/cache");
 const FixtureSubprovider = require("web3-provider-engine/subproviders/fixture");
@@ -19,24 +21,24 @@ const HookedWalletSubprovider = require("web3-provider-engine/subproviders/hooke
 const NonceSubprovider = require("web3-provider-engine/subproviders/nonce-tracker");
 const SubscriptionsSubprovider = require("web3-provider-engine/subproviders/subscriptions");
 
-class WalletConnectProvider extends ProviderEngine {
+class WalletConnectProvider {
   public bridge = "https://bridge.walletconnect.org";
   public qrcode = true;
   public qrcodeModal = QRCodeModal;
   public qrcodeModalOptions: IQRCodeModalOptions | undefined = undefined;
-  public rpc: IRPCMap | null = null;
+  public rpc: IRPCMap | null = {};
   public infuraId = "";
   public http: HttpConnection | null = null;
-  public wc: IConnector;
+  public wc: IConnector | any;
   public isConnecting = false;
   public connected = false;
   public connectCallbacks: any[] = [];
   public accounts: string[] = [];
   public chainId = 1;
-  public rpcUrl = "";
+  public providers = {}
+  public event = new EventEmitter()
 
   constructor(opts: IWalletConnectProviderOptions) {
-    super({ pollingInterval: opts.pollingInterval || 8000 });
     this.bridge = opts.connector
       ? opts.connector.bridge
       : opts.bridge || "https://bridge.walletconnect.org";
@@ -54,15 +56,8 @@ class WalletConnectProvider extends ProviderEngine {
         clientMeta: opts?.clientMeta,
       });
     this.rpc = opts.rpc || null;
-    if (
-      !this.rpc &&
-      (!opts.infuraId || typeof opts.infuraId !== "string" || !opts.infuraId.trim())
-    ) {
-      throw new Error("Missing one of the required parameters: rpc or infuraId");
-    }
     this.infuraId = opts.infuraId || "";
     this.chainId = opts?.chainId || this.chainId;
-    this.initialize();
   }
 
   get isWalletConnect() {
@@ -77,12 +72,18 @@ class WalletConnectProvider extends ProviderEngine {
     return this.wc.peerMeta;
   }
 
+  setRpcNetworks(_networks: IRPCMap) {
+    if(this.rpc !== _networks) { 
+      this.rpc = _networks
+      this.restartRpc() 
+    }
+  }
+
   // Connect with a wallet and return the addresses of all available
   // accounts.
   enable = async (): Promise<string[]> => {
     const wc = await this.getWalletConnector();
     if (wc) {
-      this.start();
       this.subscribeWalletConnector();
       return wc.accounts;
     } else {
@@ -90,11 +91,26 @@ class WalletConnectProvider extends ProviderEngine {
     }
   };
 
-  request = async (payload: any): Promise<any> => {
-    return this.send(payload);
+  setRpcProvider = async (_chainId: number, _rpcUrl: string | undefined = "") => {
+
+    const wc = await this.getWalletConnector();
+    
+    if(!wc.connected) {
+      await this.enable()
+    }
+
+    if(this.providers[_chainId] && this.providers[_chainId].engine) {
+      await this.providers[_chainId].engine.stop()
+    }
+
+    this.initialize(_chainId, _rpcUrl)
+  }
+
+  request = async (payload: any, _chainId: number): Promise<any> => {
+    return this.send(payload, _chainId);
   };
 
-  send = async (payload: any, callback?: any): Promise<any> => {
+  send = async (payload: any, _chainId: number, callback?: any): Promise<any> => {
     // Web3 1.0 beta.38 (and above) calls `send` with method and parameters
     if (typeof payload === "string") {
       const method = payload;
@@ -104,7 +120,7 @@ class WalletConnectProvider extends ProviderEngine {
         params = parsePersonalSign(params);
       }
 
-      return this.sendAsyncPromise(method, params);
+      return this.sendAsyncPromise(method, params, _chainId);
     }
 
     // ensure payload includes id and jsonrpc
@@ -117,11 +133,11 @@ class WalletConnectProvider extends ProviderEngine {
 
     // Web3 1.0 beta.37 (and below) uses `send` with a callback for async queries
     if (callback) {
-      this.sendAsync(payload, callback);
+      this.providers[_chainId].engine.sendAsync(payload, callback)
       return;
     }
 
-    return this.sendAsyncPromise(payload.method, payload.params);
+    return this.sendAsyncPromise(payload.method, payload.params, _chainId);
   };
 
   onConnect = (callback: any) => {
@@ -144,12 +160,15 @@ class WalletConnectProvider extends ProviderEngine {
     await this.onDisconnect();
   }
 
-  async handleRequest(payload: any) {
+  async handleRequest(payload: any, _chainId: number) {
     try {
       let response;
       let result: any = null;
       const wc = await this.getWalletConnector();
       switch (payload.method) {
+        case "eidoo_getNetworks":
+          result = await wc.sendCustomRequest(payload);
+          break;
         case "wc_killSession":
           await this.close();
           result = null;
@@ -167,38 +186,39 @@ class WalletConnectProvider extends ProviderEngine {
           result = wc.chainId;
           break;
         case "eth_uninstallFilter":
-          this.sendAsync(payload, (_: any) => _);
+          this.providers[_chainId].engine.sendAsync(payload, (_: any) => _)
           result = true;
           break;
         default:
-          response = await this.handleOtherRequests(payload);
+          response = await this.handleOtherRequests(payload, _chainId);
       }
       if (response) {
         return response;
       }
       return this.formatResponse(payload, result);
     } catch (error) {
-      this.emit("error", error);
+      this.event.emit("error", error);
       throw error;
     }
   }
 
-  async handleOtherRequests(payload: any): Promise<IJsonRpcResponseSuccess> {
+  async handleOtherRequests(payload: any, _chainId: number): Promise<IJsonRpcResponseSuccess> {
     if (!signingMethods.includes(payload.method) && payload.method.startsWith("eth_")) {
-      return this.handleReadRequests(payload);
+      return this.handleReadRequests(payload, _chainId);
     }
     const wc = await this.getWalletConnector();
     const result = await wc.sendCustomRequest(payload);
     return this.formatResponse(payload, result);
   }
 
-  async handleReadRequests(payload: any): Promise<IJsonRpcResponseSuccess> {
-    if (!this.http) {
+  async handleReadRequests(payload: any, _chainId: number): Promise<IJsonRpcResponseSuccess> {
+      if(!this.providers[_chainId].http) {
       const error = new Error("HTTP Connection not available");
-      this.emit("error", error);
+      this.event.emit("error", error);
       throw error;
     }
-    return this.http.send(payload);
+    // return this.http.send(payload);
+    return this.providers[_chainId].http.send(payload);
   }
 
   formatResponse(payload: any, result: any) {
@@ -236,7 +256,7 @@ class WalletConnectProvider extends ProviderEngine {
                 this.updateState(payload.params[0]);
               }
               // Emit connect event
-              this.emit("connect");
+              this.event.emit("connect");
               this.triggerConnect(wc);
               resolve(wc);
             });
@@ -259,14 +279,14 @@ class WalletConnectProvider extends ProviderEngine {
     const wc = await this.getWalletConnector();
     wc.on("disconnect", error => {
       if (error) {
-        this.emit("error", error);
+        this.event.emit("error", error);
         return;
       }
       this.onDisconnect();
     });
     wc.on("session_update", (error, payload) => {
       if (error) {
-        this.emit("error", error);
+        this.event.emit("error", error);
         return;
       }
       // Handle session update
@@ -275,56 +295,68 @@ class WalletConnectProvider extends ProviderEngine {
   }
 
   async onDisconnect() {
-    // tslint:disable-next-line:await-promise
-    await this.stop();
-    this.emit("close", 1000, "Connection closed");
-    this.emit("disconnect", 1000, "Connection disconnected");
+    
+    for (let provider of (Object.values(this.providers)) as any) {
+      await provider?.engine?.stop()
+    }
+
+    this.event.emit("close", 1000, "Connection closed");
+    this.event.emit("disconnect", 1000, "Connection disconnected");
     this.connected = false;
   }
 
   async updateState(sessionParams: any) {
-    const { accounts, chainId, networkId, rpcUrl } = sessionParams;
+    const { accounts } = sessionParams;
     // Check if accounts changed and trigger event
     if (!this.accounts || (accounts && this.accounts !== accounts)) {
       this.accounts = accounts;
-      this.emit("accountsChanged", accounts);
+      this.event.emit("accountsChanged", accounts);
     }
-    // Check if chainId changed and trigger event
-    if (!this.chainId || (chainId && this.chainId !== chainId)) {
-      this.chainId = chainId;
-      this.emit("chainChanged", chainId);
-    }
-    // Check if networkId changed and trigger event
-    if (!this.networkId || (networkId && this.networkId !== networkId)) {
-      this.networkId = networkId;
-      this.emit("networkChanged", networkId);
-    }
-    // Handle rpcUrl update
-    this.updateRpcUrl(this.chainId, rpcUrl || "");
   }
 
-  updateRpcUrl(chainId: number, rpcUrl: string | undefined = "") {
+  async updateSession(sessionParams: any) {
+    const { chainId, accounts } = sessionParams
+    const wc = await this.getWalletConnector()
+    wc.updateSession({
+      chainId,
+      accounts
+    })
+    
+  }
+
+  restartRpc() {
+    if(this.rpc) {
+      for (const [chainId, rpcUrl] of Object.entries(this.rpc) as any) {
+        // if theres already provider initialized
+        // update only the http
+        if(this.providers[chainId]) { 
+          this.updateHttpConnection(chainId, rpcUrl)
+        } else { 
+          this.initialize(chainId, rpcUrl)
+        }
+      }
+    }
+  }
+
+  updateRpcUrl(_chainId: number, _rpcUrl: string | undefined = "") {
     const rpc = { infuraId: this.infuraId, custom: this.rpc || undefined };
-    rpcUrl = rpcUrl || getRpcUrl(chainId, rpc);
-    if (rpcUrl) {
-      this.rpcUrl = rpcUrl;
-      this.updateHttpConnection();
+    _rpcUrl = _rpcUrl || getRpcUrl(_chainId, rpc);
+    if (_rpcUrl) {
+      this.updateHttpConnection(_chainId, _rpcUrl);
     } else {
-      this.emit("error", new Error(`No RPC Url available for chainId: ${chainId}`));
+      this.event.emit("error", new Error(`No RPC Url available for chainId: ${_chainId}`));
     }
   }
 
-  updateHttpConnection() {
-    if (this.rpcUrl) {
-      this.http = new HttpConnection(this.rpcUrl);
-      this.http.on("payload", payload => this.emit("payload", payload));
-      this.http.on("error", error => this.emit("error", error));
-    }
+  updateHttpConnection(_chainId: number, _rpcUrl: any) {
+      this.providers[_chainId].http = new HttpConnection(_rpcUrl);
+      this.providers[_chainId].http.on("payload", _payload => this.event.emit("payload", _payload))
+      this.providers[_chainId].http.on("error", _error => this.event.emit("error", _error))
   }
 
-  sendAsyncPromise(method: string, params: any): Promise<any> {
+  sendAsyncPromise(method: string, params: any, _chainId: number): Promise<any> {
     return new Promise((resolve, reject) => {
-      this.sendAsync(
+      this.providers[_chainId].engine.sendAsync(
         {
           id: payloadId(),
           jsonrpc: "2.0",
@@ -342,9 +374,14 @@ class WalletConnectProvider extends ProviderEngine {
     });
   }
 
-  private initialize() {
-    this.updateRpcUrl(this.chainId);
-    this.addProvider(
+  public initialize(_chainId: number, _rpcUrl: string | undefined = "") {
+
+    this.providers[_chainId] = {}
+    this.providers[_chainId].engine = new ProviderEngine({pollingInterval: 8000})
+
+    this.updateRpcUrl(_chainId, _rpcUrl)
+
+    this.providers[_chainId].engine.addProvider(
       new FixtureSubprovider({
         eth_hashrate: "0x00",
         eth_mining: false,
@@ -352,23 +389,25 @@ class WalletConnectProvider extends ProviderEngine {
         net_listening: true,
         web3_clientVersion: `WalletConnect/v1.x.x/javascript`,
       }),
-    );
-    this.addProvider(new CacheSubprovider());
-    this.addProvider(new SubscriptionsSubprovider());
-    this.addProvider(new FilterSubprovider());
-    this.addProvider(new NonceSubprovider());
-    this.addProvider(new HookedWalletSubprovider(this.configWallet()));
-    this.addProvider({
+    )
+    this.providers[_chainId].engine.addProvider(new CacheSubprovider())
+    this.providers[_chainId].engine.addProvider(new SubscriptionsSubprovider())
+    this.providers[_chainId].engine.addProvider(new FilterSubprovider())
+    this.providers[_chainId].engine.addProvider(new NonceSubprovider())
+    this.providers[_chainId].engine.addProvider(new HookedWalletSubprovider(this.configWallet()))
+    this.providers[_chainId].engine.addProvider({
       handleRequest: async (payload: IJsonRpcRequest, next: any, end: any) => {
         try {
-          const { error, result } = await this.handleRequest(payload);
+          const { error, result } = await this.handleRequest(payload, _chainId);
           end(error, result);
         } catch (error) {
           end(error);
         }
       },
       setEngine: (_: any) => _,
-    });
+    })
+
+    this.providers[_chainId].engine.start()
   }
 
   private configWallet() {
