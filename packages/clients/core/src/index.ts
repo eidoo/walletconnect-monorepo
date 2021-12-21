@@ -44,7 +44,8 @@ import {
   mobileLinkChoiceKey,
   isMobile,
   removeLocal,
-} from "../../../helpers/utils";
+} from "@eidoo/walletconnect-monorepo/packages/helpers/utils";
+
 import SocketTransport from "@walletconnect/socket-transport";
 import {
   ERROR_SESSION_CONNECTED,

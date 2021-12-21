@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
-const utils_1 = require("../../../helpers/utils");
+const utils_1 = require("@eidoo/walletconnect-monorepo/packages/helpers/utils");
 const socket_transport_1 = (0, tslib_1.__importDefault)(require("@walletconnect/socket-transport"));
 const errors_1 = require("./errors");
 const events_1 = (0, tslib_1.__importDefault)(require("./events"));
